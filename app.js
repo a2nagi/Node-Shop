@@ -1,18 +1,36 @@
 const express = require('express')
 const app = express();
 const morgan = require('morgan');
+const bodyParser = require('body-parser');
 
 const productRoutes = require('./api/routes/products');
 const orderRoutes = require('./api/routes/orders');
 
 app.use(morgan('dev'));
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
+
+    // All requests supported by the API
+    if (req.method === 'OPTION'){
+        res.header('Access-Control-Allow-Methods', 'POST', 'GET', 'POST', 'DELETE', 'PATCH');
+        return res.status(200).json({});
+    }
+    next();
+});
 
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
 
 app.use((req, res, next) => {
     const error = new Error('Route Not Found')
-    error.status(404);
+    error.status = 404;
     next(error);
 });
 
